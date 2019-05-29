@@ -1,5 +1,5 @@
 class Conge {
-  final DateTime dateDebut;
-  final DateTime dateFin;
-  final List<AssoTypeConges> joursPris;
+  final DateTime dateDebut = DateTime.now();
+  final DateTime dateFin = DateTime.now();
+//  final List<AssoTypeConges> joursPris = [];
 }

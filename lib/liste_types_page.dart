@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'model/type_conge.dart';
+import 'form_types_page.dart';
 import 'package:intl/intl.dart';
 
 final dummyList = [
@@ -9,18 +10,7 @@ final dummyList = [
 ];
 
 class ListTypesPages extends StatefulWidget {
-  ListTypesPages({Key key, this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+  ListTypesPages({Key key}) : super(key: key);
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -28,7 +18,11 @@ class ListTypesPages extends StatefulWidget {
 
 class _MyHomePageState extends State<ListTypesPages> {
   _addTypeConge() {
-
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => FormTypesPages()
+      )
+    );
   }
 
   void _more() {
@@ -65,7 +59,7 @@ class _MyHomePageState extends State<ListTypesPages> {
   }
 
   Widget _buildListItem(BuildContext context, Map data) {
-    DateFormat df = new DateFormat().add_yMd();
+    DateFormat df = new DateFormat.yMd();
     final typeConges = TypeConge.fromMap(data) ;
     return Padding(
       key: ValueKey(typeConges.nom),

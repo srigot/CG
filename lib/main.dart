@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'liste_types_page.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() => runApp(MyApp());
 
@@ -8,7 +9,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
+      supportedLocales: [
+        const Locale('fr'),
+      ],
+      title: 'CG',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -21,7 +29,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: ListTypesPages(title: 'Flutter Demo Home Page'),
+      home: ListTypesPages(),
     );
   }
 }
