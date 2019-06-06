@@ -1,39 +1,45 @@
+import 'package:cg/model/type_conge.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 
 class FormTypesPages extends StatefulWidget {
-  FormTypesPages({Key key, this.title}) : super(key: key);
+  FormTypesPages({Key key, this.typeConge}) : super(key: key);
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+  final TypeConge typeConge ;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _MyHomePageState createState() => _MyHomePageState(typeConge: typeConge);
 }
 
 class _MyHomePageState extends State<FormTypesPages> {
+  final TypeConge typeConge ;
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _controller = new TextEditingController();
+  final TextEditingController _controllerLibelle = new TextEditingController();
+  final TextEditingController _controllerDateDebut = new TextEditingController();
+  final TextEditingController _controllerDateFin = new TextEditingController();
+  final TextEditingController _controllerNbJours = new TextEditingController();
 
-  Future _selectDate(String initalDateString) async {
+  _MyHomePageState({this.typeConge}) {
+    if (this.typeConge != null) {
+      _controllerLibelle.text = this.typeConge.nom ;
+      _controllerDateDebut.text = new DateFormat.yMd().format(typeConge.dateDebut);
+      _controllerDateFin.text = new DateFormat.yMd().format(typeConge.dateFin);
+      _controllerNbJours.text = this.typeConge.nombreJours.toString();
+    }
+  }
+
+  Future _selectDate(TextEditingController ctrl) async {
     DateTime now = new DateTime.now();
-    DateTime initialDate = convertToDate(initalDateString) ?? now;
+    DateTime initialDate = convertToDate(ctrl.text) ?? now;
     DateTime picked = await showDatePicker(
         context: context,
         initialDate: initialDate,
         firstDate: new DateTime(2016),
         lastDate: new DateTime(2030)
     );
-    if (picked != null) setState(() => _controller.text = new DateFormat.yMd().format(picked));
+    if (picked != null) setState(() => ctrl.text = new DateFormat.yMd().format(picked));
   }
 
   DateTime convertToDate(String input) {
@@ -70,9 +76,9 @@ class _MyHomePageState extends State<FormTypesPages> {
           children: <Widget>[
             TextFormField(
               decoration: const InputDecoration(
-
                 labelText: 'Libellé',
               ),
+              controller: _controllerLibelle,
               validator: (value) {
                 if (value.isEmpty) {
                   return 'Merci de saisir une valeur';
@@ -84,10 +90,26 @@ class _MyHomePageState extends State<FormTypesPages> {
                 labelText: 'Date de début',
                 suffixIcon: IconButton(
                   icon: Icon(Icons.calendar_today),
-                  onPressed: () => _selectDate(_controller.text),
+                  onPressed: () => _selectDate(_controllerDateDebut),
                 ),
               ),
-              controller: _controller,
+              controller: _controllerDateDebut,
+              keyboardType: TextInputType.datetime,
+              validator: (value) {
+                if (value.isEmpty) {
+                  return 'Merci de saisir une valeur';
+                }
+              },
+            ),
+            TextFormField(
+              decoration: InputDecoration(
+                labelText: 'Date de fin',
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.calendar_today),
+                  onPressed: () => _selectDate(_controllerDateFin),
+                ),
+              ),
+              controller: _controllerDateFin,
               keyboardType: TextInputType.datetime,
               validator: (value) {
                 if (value.isEmpty) {
@@ -99,6 +121,7 @@ class _MyHomePageState extends State<FormTypesPages> {
               decoration: const InputDecoration(
                 labelText: 'Nombre de jours',
               ),
+              controller: _controllerNbJours,
               keyboardType: TextInputType.number,
               validator: (value) {
                 if (value.isEmpty) {
@@ -111,7 +134,21 @@ class _MyHomePageState extends State<FormTypesPages> {
               child: RaisedButton(
                 onPressed: () {
                   if (_formKey.currentState.validate()) {
-                    Navigator.pop(context);
+                    Map<String, dynamic> newType = {
+                        "nom": _controllerLibelle.text,
+                        "dateDebut": convertToDate(_controllerDateDebut.text),
+                        "dateFin": convertToDate(_controllerDateFin.text),
+                        "nombreJours": int.parse(_controllerNbJours.text),
+                    } ;
+                    var retour ;
+                    if (this.typeConge != null) {
+                      retour = this.typeConge.reference.updateData(newType);
+                    } else {
+                      retour = Firestore.instance.collection('types').add(newType) ;
+                    }
+                    retour.then((ref) {
+                      Navigator.pop(context);
+                    });
                   }
                 },
                 child: Text('Submit'),

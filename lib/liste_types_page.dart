@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'model/type_conge.dart';
 import 'form_types_page.dart';
 import 'package:intl/intl.dart';
+import 'auth.dart';
 
 final dummyList = [
   {"nom":"Congés payés", "dateDebut": DateTime.now(), "dateFin": DateTime.now(), "nombreJours": 25},
@@ -10,13 +12,27 @@ final dummyList = [
 ];
 
 class ListTypesPages extends StatefulWidget {
-  ListTypesPages({Key key}) : super(key: key);
+  ListTypesPages({Key key, this.uuid}) : super(key: key);
+
+  final String uuid;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _MyHomePageState createState() => _MyHomePageState(uuid);
 }
 
 class _MyHomePageState extends State<ListTypesPages> {
+  _MyHomePageState(uuid) {
+    print(uuid);
+  }
+
+  _editTypeConge(TypeConge typeConge) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => FormTypesPages(typeConge: typeConge)
+      )
+    );
+  }
+
   _addTypeConge() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -26,6 +42,9 @@ class _MyHomePageState extends State<ListTypesPages> {
   }
 
   void _more() {
+    AuthService().signIn().then((user) {
+      print(user.displayName);
+    });
 //    Navigator.of(context).push();
   }
 
@@ -48,19 +67,26 @@ class _MyHomePageState extends State<ListTypesPages> {
   }
 
   Widget _buildBody(BuildContext context) {
-    return _buildList(context, dummyList);
+    return StreamBuilder<QuerySnapshot>(
+      stream: Firestore.instance.collection('types').snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return LinearProgressIndicator();
+        return _buildList(context, snapshot.data.documents);
+      },
+    );
+    
   }
 
-  Widget _buildList(BuildContext context, List<Map> snapshot) {
+  Widget _buildList(BuildContext context, List<DocumentSnapshot> snapshot) {
     return ListView(
       padding: const EdgeInsets.only(top: 20.0),
       children: snapshot.map((data) => _buildListItem(context, data)).toList(),
     );
   }
 
-  Widget _buildListItem(BuildContext context, Map data) {
+  Widget _buildListItem(BuildContext context, DocumentSnapshot data) {
     DateFormat df = new DateFormat.yMd();
-    final typeConges = TypeConge.fromMap(data) ;
+    final typeConges = TypeConge.fromSnapshot(data) ;
     return Padding(
       key: ValueKey(typeConges.nom),
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -73,6 +99,9 @@ class _MyHomePageState extends State<ListTypesPages> {
           title: Text(typeConges.nom),
           subtitle: Text(df.format(typeConges.dateDebut) + " - " + df.format(typeConges.dateFin)),
           trailing: Text(typeConges.nombreJours.toString() + " / " + typeConges.nombreJours.toString() + "j"),
+          onLongPress: () {
+            _editTypeConge(typeConges);
+          },
         ),
       ),
     );
