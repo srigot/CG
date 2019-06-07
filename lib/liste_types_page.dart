@@ -5,12 +5,6 @@ import 'form_types_page.dart';
 import 'package:intl/intl.dart';
 import 'auth.dart';
 
-final dummyList = [
-  {"nom":"Congés payés", "dateDebut": DateTime.now(), "dateFin": DateTime.now(), "nombreJours": 25},
-  {"nom":"Jours de repos", "dateDebut": DateTime.now(), "dateFin": DateTime.now(), "nombreJours": 10},
-  {"nom":"Congés ancienneté", "dateDebut": DateTime.now(), "dateFin": DateTime.now(), "nombreJours": 2},
-];
-
 class ListTypesPages extends StatefulWidget {
   ListTypesPages({Key key, this.uuid}) : super(key: key);
 
@@ -50,20 +44,7 @@ class _MyHomePageState extends State<ListTypesPages> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('CG - Gestion congés'),
-        actions: <Widget>[
-          IconButton(icon: Icon(Icons.list), onPressed: _more),
-        ],
-      ),
-      body: _buildBody(context),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addTypeConge,
-        tooltip: 'Ajouter',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
+    return _buildBody(context) ;
   }
 
   Widget _buildBody(BuildContext context) {
@@ -84,26 +65,42 @@ class _MyHomePageState extends State<ListTypesPages> {
     );
   }
 
+  String _calculerNombreJours(AsyncSnapshot<QuerySnapshot> snapshot) {
+    if (!snapshot.hasData) return "-";
+    if (snapshot.data.documents.length < 1) return "0" ;
+    return snapshot.data.documents
+      .map((data) => data['nombreJours'])
+      .reduce((valeur, element) => valeur + element)
+      .toString() ;
+  }
+
   Widget _buildListItem(BuildContext context, DocumentSnapshot data) {
     DateFormat df = new DateFormat.yMd();
     final typeConges = TypeConge.fromSnapshot(data) ;
-    return Padding(
-      key: ValueKey(typeConges.nom),
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey),
-          borderRadius: BorderRadius.circular(5.0),
-        ),
-        child: ListTile(
-          title: Text(typeConges.nom),
-          subtitle: Text(df.format(typeConges.dateDebut) + " - " + df.format(typeConges.dateFin)),
-          trailing: Text(typeConges.nombreJours.toString() + " / " + typeConges.nombreJours.toString() + "j"),
-          onLongPress: () {
-            _editTypeConge(typeConges);
-          },
-        ),
-      ),
+    print("ID = " + typeConges.reference.path);
+    return StreamBuilder<QuerySnapshot>(
+      stream: Firestore.instance.collection('assoTypes')
+        .where('typeConges', isEqualTo: typeConges.reference).snapshots(),
+      builder: (context, snapshot) {
+        return Padding(
+          key: ValueKey(typeConges.nom),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(5.0),
+            ),
+            child: ListTile(
+              title: Text(typeConges.nom),
+              subtitle: Text(df.format(typeConges.dateDebut) + " - " + df.format(typeConges.dateFin)),
+              trailing: Text(_calculerNombreJours(snapshot) + " / " + typeConges.nombreJours.toString() + "j"),
+              onLongPress: () {
+                _editTypeConge(typeConges);
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -30,6 +30,7 @@ dependencies:
   intl: ^0.15.8
   firebase_auth: ^0.6.6
   google_sign_in: ^4.0.2
+  rxdart: ^0.22.0
 
 dev_dependencies:
   flutter_test:

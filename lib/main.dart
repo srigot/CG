@@ -1,4 +1,5 @@
 import 'package:cg/auth.dart';
+import 'package:cg/liste_conges_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -22,15 +23,6 @@ class MyApp extends StatelessWidget {
       ],
       title: 'CG',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
         primarySwatch: Colors.blue,
       ),
       home: _handleCurrentScreen(),
@@ -46,7 +38,8 @@ Widget _handleCurrentScreen() {
         return LinearProgressIndicator();
       } else {
         if (snapshot.hasData) {
-          return ListTypesPages(uuid: snapshot.data.uid) ;
+          return MainPage();
+//          return MainPage(uuid: snapshot.data.uid) ;
         }
         return _loginScreen();
       }
@@ -65,4 +58,60 @@ Widget _loginScreen() {
 
 void _login() {
   AuthService().signIn();
+}
+
+class MainPage extends StatefulWidget {
+  @override
+  _MainPageWidgetState createState() => _MainPageWidgetState();
+}
+
+class _MainPageWidgetState extends State<MainPage> {
+  int _selectedIndex = 0;
+
+  void _onItemTapped(int index) {
+    setState(() {
+     _selectedIndex = index; 
+    });
+  }  
+  Widget _getPageSelected() {
+    if (_selectedIndex == 1) return ListeCongesPage();
+    return ListTypesPages() ;
+  }
+
+  _add() {
+
+  }
+
+  FloatingActionButton _getFab() {
+    return FloatingActionButton(
+        onPressed: _add,
+        tooltip: 'Ajouter',
+        child: Icon(Icons.add),
+      );
+  } 
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('CG - Gestion congés'),
+      ),
+      body: _getPageSelected(),
+      floatingActionButton: _getFab(),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            title: Text('Liste congés'),
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list),
+            title: Text('Types congés'),
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,),
+    );
+  }
+
 }
